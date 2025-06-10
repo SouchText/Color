@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Renk Tanıma Sistemi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; background: #f3f3f3; padding: 10px; margin: 0; text-align: center; }
+    #canvas { border:1px solid #ccc; max-width: 100%; cursor: crosshair; margin-top: 10px; }
+    .info { margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap:wrap;}
+    .box { padding: 10px; border:1px solid #999; border-radius:5px; background:white; }
+    .color-preview { width:50px; height:50px; border:1px solid #000; }
+    button, input[type=file] { margin-top:10px; padding:8px 12px; font-size:16px; }
+  </style>
+</head>
+<body>
+  <h2>Renk Tanıma Sistemi</h2>
+  <p>Fotoğraf yükle veya kamerayla çek, ardından resme dokun/tıkla:</p>
+  <input type="file" id="imgLoader" accept="image/*" capture="environment">
+  <canvas id="canvas"></canvas>
+  <div class="info">
+    <div class="box"><div id="colorSwatch" class="color-preview"></div></div>
+    <div class="box"><strong>HEX:</strong> <span id="hex">—</span></div>
+    <div class="box"><strong>RGB:</strong> <span id="rgb">—</span></div>
+  </div>
+
+  <script>
+    const loader = document.getElementById('imgLoader');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const hexOut = document.getElementById('hex');
+    const rgbOut = document.getElementById('rgb');
+    const swatch = document.getElementById('colorSwatch');
+    loader.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img,0,0);
+        }
+        img.src = ev.target.result;
+      }
+      reader.readAsDataURL(file);
+    });
+
+    canvas.addEventListener('click', e => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const p = ctx.getImageData(x,y,1,1).data;
+      const hex = rgbToHex(p[0],p[1],p[2]);
+      const rgb = `(${p[0]}, ${p[1]}, ${p[2]})`;
+      hexOut.textContent = hex;
+      rgbOut.textContent = rgb;
+      swatch.style.backgroundColor = hex;
+    });
+
+    function rgbToHex(r,g,b){
+      return "#" + [r,g,b].map(c=>c.toString(16).padStart(2,'0')).join('').toUpperCase();
+    }
+  </script>
+</body>
+</html>
